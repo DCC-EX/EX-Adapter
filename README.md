@@ -1,2 +1,4 @@
 # EX-Adapter
- Generic code for Thrott;e/Bus adapter
+ Generic code for Throttle/Bus adapter.....
+ This is not for general use until advised otherwise.
+ 

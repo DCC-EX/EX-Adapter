@@ -21,6 +21,7 @@ class Adapter {
     static byte params;
     static ParserState state;
     static uint64_t p[4];
+    static bool ready; 
     static bool parse(char hot);
     static void processCommand();
     static void printHexLittleEndian(byte * px, byte length);
