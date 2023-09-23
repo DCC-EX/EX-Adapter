@@ -8,8 +8,7 @@ class EventListener {
      static uint16_t getId(uint64_t _event);
      static const uint16_t NOT_FOUND=0xFFFF;
      static void list();
-     
-    private:
+     static int count(); 
      static EventListener * first;
      uint64_t event;
      uint16_t id;

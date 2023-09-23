@@ -21,6 +21,12 @@ uint16_t EventListener::getId(uint64_t _event) {
   return NOT_FOUND;
 }
 
+int EventListener::count() {
+  int c=0;
+  for (EventListener * e= first; e ; e=e->next) c++;
+  return c;
+}
+
 void EventListener::list() {
   Serial.println(F("<* Listening for:"));
   for (EventListener * e= first; e ; e=e->next) { 

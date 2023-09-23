@@ -4,11 +4,11 @@
 #include <Arduino.h>
 class EventSender {
     public:
-     EventSender(uint16_t _event);
+     EventSender(uint64_t _event);
      static void list();
-    private:
      static EventSender * first;
-     uint16_t event;
+     static int count();
+     uint64_t event;
      EventSender* next; 
 };
 #endif

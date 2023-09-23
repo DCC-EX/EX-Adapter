@@ -8,10 +8,16 @@
 
 EventSender * EventSender::first=NULL;
 
-EventSender::EventSender(uint16_t _event) {
+EventSender::EventSender(uint64_t _event) {
   event=_event;
   next=EventSender::first;
   EventSender::first=this;
+}
+
+int EventSender::count() {
+  int c=0;
+  for (EventSender * e= first; e ; e=e->next) c++;
+  return c;
 }
 
 void EventSender::list() {

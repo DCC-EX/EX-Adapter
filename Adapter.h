@@ -13,8 +13,8 @@ class Adapter {
     public:
       static void setup();
       static void loop();
-      static void printHex(uint16_t value );
       static void printHex(uint64_t value );
+      static void eventHandler(uint64_t event);
     
     private:
     static char opcode;
@@ -24,8 +24,7 @@ class Adapter {
     static bool ready; 
     static bool parse(char hot);
     static void processCommand();
-    static void printHexLittleEndian(byte * px, byte length);
-
+    
 };
 
 #endif

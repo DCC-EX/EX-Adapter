@@ -9,6 +9,7 @@ char Adapter::opcode='?';
 byte Adapter::params=0;
 uint64_t Adapter::p[4];
 
+const uint64_t sender_mask=0xFFFFFFFFFFFF0000;
 
 void Adapter::setup() {
     Serial.begin(115200);
@@ -17,6 +18,8 @@ void Adapter::setup() {
 }
 
 void Adapter::loop() {
+    if (ready) Bus::loop();
+
     // Read any inbound
     while(Serial.available()) {
         if (parse(Serial.read())) {
@@ -25,7 +28,6 @@ void Adapter::loop() {
             break;
         }
     }
-    if (ready) Bus::loop();
 }
 
 const char CMD_LCC='L'; // <opcode 
@@ -104,22 +106,23 @@ bool Adapter::parse(char input) {
 
     // Commands from DCC-EX are as follows
        
-    if (opcode==CMD_SEND) { // <L  event>  send self:event to LCC 
+    if (opcode==CMD_SEND) { // <L  event>  send self:event to LCC         
         Bus::sendEvent(p[0]);
         return; 
     }
     
     if (opcode==CMD_READY) { // <LR>  all data got from EXRAIL
+        Bus::setCallback(eventHandler);
         // create heap resident arrays that the Bus can keep a reference to.
-         int senderCount=EventSender::count();
-        uint16_t * senderArray = new uint16_t[senderCount];
+        int16_t senderCount=EventSender::count();
+        uint64_t * senderArray = new uint64_t[senderCount];
         int sa=0;
         for (EventSender * e=EventSender::first; e; e=e->next) {
             senderArray[sa++]=e->event;
         }
         Bus::outboundEvents(senderArray,senderCount);
         
-        int listenerCount=EventListener::count();
+        int16_t listenerCount=EventListener::count();
         uint64_t * listenerArray = new uint64_t[listenerCount];
         int la=0;
         for (EventListener * e=EventListener::first; e; e=e->next) {
@@ -155,20 +158,33 @@ bool Adapter::parse(char input) {
     // All other incoming commands are ignored for now
 }
 
+void Adapter::eventHandler(uint64_t event) {
+        for (EventListener * e=EventListener::first; e; e=e->next) {
+            if (event==e->event) {
+               Serial.print(F("<L "));
+               Serial.print(e->id);
+               Serial.print(F(">\n"));
+               break; 
+            }
+        }
+    
+}
 const char Hexpattern[]="0123456789ABCDEF";
-void Adapter::printHex(uint16_t value) {
-     printHexLittleEndian((byte *) &value, sizeof(value));
-} 
-void Adapter::printHex(uint64_t value) {
-     printHexLittleEndian((byte *) &value, sizeof(value));
-} 
 
-void Adapter::printHexLittleEndian(byte * px, byte length) {
+void Adapter::printHex(uint64_t value) {
+     if (value == 0) {
+        Serial.print(F("x00"));
+        return;
+     }
+     byte * px=((byte *) & value) + sizeof(value);
      Serial.print('x');
-     px+=length; 
-     for (int i=length;i;i--) {
+     bool print=false; // until first nonzero byte
+     for (int i=sizeof(value);i;i--) {
        px--;
-       Serial.print(Hexpattern[(*px) >> 4]);
-       Serial.print(Hexpattern[(*px) & 0x0F]);
+       if (*px) print=true;
+       if (print) {
+        Serial.print(Hexpattern[(*px) >> 4]);
+        Serial.print(Hexpattern[(*px) & 0x0F]);
+        }
      }
 }
