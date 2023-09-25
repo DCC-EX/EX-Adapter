@@ -14,7 +14,7 @@ class Adapter {
       static void setup();
       static void loop();
       static void printHex(uint64_t value );
-      static void eventHandler(uint64_t event);
+      static void eventHandler(uint16_t eventid);
     
     private:
     static char opcode;

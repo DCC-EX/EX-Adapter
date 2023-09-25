@@ -158,17 +158,12 @@ bool Adapter::parse(char input) {
     // All other incoming commands are ignored for now
 }
 
-void Adapter::eventHandler(uint64_t event) {
-        for (EventListener * e=EventListener::first; e; e=e->next) {
-            if (event==e->event) {
-               Serial.print(F("<L "));
-               Serial.print(e->id);
-               Serial.print(F(">\n"));
-               break; 
-            }
-        }
-    
+void Adapter::eventHandler(uint16_t eventid) {
+    Serial.print(F("<L "));
+    Serial.print(eventid);
+    Serial.print(F(">\n"));  
 }
+
 const char Hexpattern[]="0123456789ABCDEF";
 
 void Adapter::printHex(uint64_t value) {

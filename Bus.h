@@ -1,7 +1,7 @@
 #ifndef Bus_h
 #define Bus_h
 #include <Arduino.h>
-typedef void (*EVENT_CALLBACK)(uint64_t event);
+typedef void (*EVENT_CALLBACK)(uint16_t eventid);
 
 class Bus {
       public:
@@ -13,7 +13,7 @@ class Bus {
       static void inboundEvents(uint64_t inbound[], int16_t count);
 
       // Tell bus the callback function to invoke when a listened to event arrives.
-      static void setCallback(EVENT_CALLBACK callback);
+      static void setCallback(EVENT_CALLBACK _callback);
 
       // Tell bus we are config complete and ready to play. 
       static void ready();
@@ -23,6 +23,8 @@ class Bus {
       
       // Arduino activity loop called repeatedly
       static void loop();
+      
+      static EVENT_CALLBACK adapterCallback;
 };
 
 #endif
