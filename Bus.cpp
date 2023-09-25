@@ -70,9 +70,9 @@ void Bus::inboundEvents(uint64_t inbound[], int16_t count) {
 // Tell bus we are config complete and ready to play. 
 void Bus::ready() {
     // Add the hardware CAN device as a bridge
-    // ????? IS this correct???
     openmrn.add_can_port_async("/dev/twai/twai0");
     openmrn.begin();
+    openmrn.start_executor_thread();
 }
 
 /// END OF SETUP ROUTINES 
@@ -86,7 +86,8 @@ void Bus::sendEvent(uint64_t eventid) {
 
 // Arduino activity loop called repeatedly
 void Bus::loop() {
-      openmrn.loop();
+    // no longer required as we have done openmrn.start_executor_thread()
+    //  openmrn.loop();
 }
 
 
