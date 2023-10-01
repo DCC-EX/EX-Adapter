@@ -12,7 +12,7 @@ NOTES:
 
 
 #include "Bus.h"
-#include <openMRNLite.h>
+#include <OpenMRNLite.h>
 #include <openlcb/CallbackEventHandler.hxx>
 #include <executor/Notifiable.hxx>
 
