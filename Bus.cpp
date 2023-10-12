@@ -62,6 +62,7 @@ CallbackEventHandler * eventHandler;
 void event_callback(const EventRegistryEntry &registry_entry,
                     EventReport *report, BarrierNotifiable *done) {
   AutoNotify an(done);   // <-- never forget this line! The stack will freeze if you forget it.
+  printf("event_callback()\n");
   uint32_t user_bits = registry_entry.user_arg & CallbackEventHandler::USER_BIT_MASK;
   Bus::adapterCallback(user_bits); // callback to the Adapter
 }
@@ -98,6 +99,7 @@ void Bus::inboundEvents(uint64_t inbound[], int16_t count) {
      
 // Tell bus we are config complete and ready to play. 
 void Bus::ready() {
+    printf("Bus::ready()\n");
       // Initialize the SPIFFS filesystem as our persistence layer
     if (!SPIFFS.begin())
     {
