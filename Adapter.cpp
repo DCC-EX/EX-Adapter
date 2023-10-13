@@ -87,7 +87,7 @@ bool Adapter::parse(char input) {
 
         case PARSE:
              if (input>='0' && input<='9') p[params]=p[params]*base + (input-'0');
-             else if (input>='A' && input<='F') p[params]=p[params]*base + (input-'A');
+             else if (input>='A' && input<='F') p[params]=p[params]*base + (input-'A'+10);
              else if (input==' ') {
                 params++;
                 state=SKIP;
