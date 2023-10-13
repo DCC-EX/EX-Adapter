@@ -61,8 +61,6 @@ CallbackEventHandler * eventHandler;
 /// The user_bits are the Adapter-chosen id number to save a re-lookup.
 void event_callback(const EventRegistryEntry &registry_entry,
                     EventReport *report, BarrierNotifiable *done) {
-  AutoNotify an(done);   // <-- never forget this line! The stack will freeze if you forget it.
-  printf("event_callback()\n");
   uint32_t user_bits = registry_entry.user_arg & CallbackEventHandler::USER_BIT_MASK;
   Bus::adapterCallback(user_bits); // callback to the Adapter
 }
