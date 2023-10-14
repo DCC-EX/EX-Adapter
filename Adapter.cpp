@@ -1,7 +1,26 @@
+/*
+ *  © 2023 Chris Harlow
+ *  © 2023 Alex Shepherd
+ *  © 2023 Balazs Racz
+ *  All rights reserved.
+ *
+ *  This file is part of EX-Adapter for LCC
+ *
+ *  This is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  It is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with CommandStation.  If not, see <https://www.gnu.org/licenses/>.
+ */
 #include <Arduino.h> 
 #include "Adapter.h"
-#include "EventListener.h"
-#include "EventSender.h"
 #include "Bus.h"
 
 ParserState Adapter::state=ParserState::READY; 
@@ -14,12 +33,10 @@ const uint64_t sender_mask=0xFFFFFFFFFFFF0000;
 void Adapter::setup() {
     Serial.begin(115200);
     Serial.print(F("<L>\r\n")); // introduce self to CS.
-    // Bus::setCallback(eventArrived); 
+    Bus::setCallback(eventHandler);
 }
 
 void Adapter::loop() {
-    if (ready) Bus::loop();
-
     // Read any inbound
     while(Serial.available()) {
         if (parse(Serial.read())) {
@@ -36,9 +53,6 @@ const char CMD_SENDS='S';       //<LS xevent>
 const char CMD_READY='R';       // <LR>
 const char CMD_SEND=' ';  // <L event>
 const char CMD_DUMP='D';
- 
-
-bool Adapter::ready=false;
 
 bool Adapter::parse(char input) {
   static byte base=10;
@@ -104,82 +118,37 @@ bool Adapter::parse(char input) {
 
    void Adapter::processCommand() {
 
-    // Commands from DCC-EX are as follows
-       
-    if (opcode==CMD_SEND) { // <L  event>  send self:event to LCC         
-        Bus::sendEvent(p[0]);
-        return; 
-    }
+    switch(opcode) {   
+        case CMD_SEND: // <L  event>  send event to LCC         
+            Bus::sendEvent(p[0]);
+            break;
     
-    if (opcode==CMD_READY) { // <LR>  all data got from EXRAIL
-        Bus::setCallback(eventHandler);
-        // create heap resident arrays that the Bus can keep a reference to.
-        int16_t senderCount=EventSender::count();
-        uint64_t * senderArray = new uint64_t[senderCount];
-        int sa=0;
-        for (EventSender * e=EventSender::first; e; e=e->next) {
-            senderArray[sa++]=e->event;
-        }
-        Bus::outboundEvents(senderArray,senderCount);
+        case CMD_READY: // <LR>  all registration done 
+            Bus::ready();
+            break;
+    
+        case CMD_LISTENS_TO:  // <LL id event> 
+            // Add sender:event to listened list with id
+            Bus::registerInboundEvent(p[1],p[0]);
+            break;
+
+        case CMD_SENDS:  // <LS event>
+            Bus::registerOutboundEvent(p[0]);
+            break; 
         
-        int16_t listenerCount=EventListener::count();
-        uint64_t * listenerArray = new uint64_t[listenerCount];
-        int la=0;
-        for (EventListener * e=EventListener::first; e; e=e->next) {
-            listenerArray[la++]=e->event;
-        }
-        Bus::inboundEvents(listenerArray,listenerCount);
-        ready=true;  
-        Bus::ready();
-        return; 
+        case CMD_DUMP: // <LD>  Dump
+            Serial.print(F("<* LD no longer exists *>\n"));
+            break;
+        
+        default:
+            // All other incoming commands are ignored to meet 
+            // DCC-EX throttle rules.
+            break;
     }
-    
-    if (opcode==CMD_LISTENS_TO) { // <LL  id sender:event> 
-        // Add sender:event to listened list with id
-        new EventListener(p[0],p[1]);
-        return; 
-    }
-    
-    if (opcode==CMD_SENDS) { // <LS event>
-        // Add self:event to possible sending list
-        // De-duplicate as exrail may send from multiple places
-        for (EventSender * es=EventSender::first;es;es=es->next) 
-            if (es->event==p[0]) return; 
-        new EventSender(p[0]);
-        return; 
-    }
-    
-    if (opcode==CMD_DUMP) { // <LD>  Dump
-        EventListener::list();
-        EventSender::list();
-        return; 
-    }
-   
-    // All other incoming commands are ignored for now
 }
 
-void Adapter::eventHandler(uint16_t eventid) {
+void Adapter::eventHandler(uint32_t eventid) {
     Serial.print(F("<L "));
     Serial.print(eventid);
     Serial.print(F(">\n"));  
-}
-
-const char Hexpattern[]="0123456789ABCDEF";
-
-void Adapter::printHex(uint64_t value) {
-     if (value == 0) {
-        Serial.print(F("x00"));
-        return;
-     }
-     byte * px=((byte *) & value) + sizeof(value);
-     Serial.print('x');
-     bool print=false; // until first nonzero byte
-     for (int i=sizeof(value);i;i--) {
-       px--;
-       if (*px) print=true;
-       if (print) {
-        Serial.print(Hexpattern[(*px) >> 4]);
-        Serial.print(Hexpattern[(*px) & 0x0F]);
-        }
-     }
 }

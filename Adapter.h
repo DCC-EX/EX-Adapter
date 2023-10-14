@@ -1,3 +1,25 @@
+/*
+ *  © 2023 Chris Harlow
+ *  © 2023 Alex Shepherd
+ *  © 2023 Balazs Racz
+ *  All rights reserved.
+ *
+ *  This file is part of EX-Adapter for LCC
+ *
+ *  This is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  It is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with CommandStation.  If not, see <https://www.gnu.org/licenses/>.
+ */
+
 #ifndef Adapter_h
 #define Adapter_h
 #include <Arduino.h>
@@ -13,15 +35,13 @@ class Adapter {
     public:
       static void setup();
       static void loop();
-      static void printHex(uint64_t value );
-      static void eventHandler(uint16_t eventid);
+      static void eventHandler(uint32_t eventid);
     
     private:
     static char opcode;
     static byte params;
     static ParserState state;
     static uint64_t p[4];
-    static bool ready; 
     static bool parse(char hot);
     static void processCommand();
     

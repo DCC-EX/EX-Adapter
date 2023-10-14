@@ -1,14 +1,24 @@
-/* Code below is based on help from Balazs Racz
-   Full and appropriate copyright attribution will follow. 
-  
-NOTES: 
-    Bus:: Functions below are the simple shim from the Adapter.
-    All openmrn/openlcb references are confined to this file.
-    
-    The code contains markers //??? where I (chris) have no 
-    idea if this is correct or not. 
-
-*/
+/*
+ *  © 2023 Alex Shepherd
+ *  © 2023 Balazs Racz
+ *  © 2023 Chris Harlow
+ *  All rights reserved.
+ *
+ *  This file is part of EX-Adapter for LCC
+ *
+ *  This is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  It is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with CommandStation.  If not, see <https://www.gnu.org/licenses/>.
+ */
 
 
 #include "Bus.h"
@@ -61,6 +71,10 @@ CallbackEventHandler * eventHandler;
 /// The user_bits are the Adapter-chosen id number to save a re-lookup.
 void event_callback(const EventRegistryEntry &registry_entry,
                     EventReport *report, BarrierNotifiable *done) {
+  // ignore producer events we created                       
+  if (registry_entry.user_arg==CallbackEventHandler::RegistryEntryBits::IS_PRODUCER) return;
+  
+  // extract the callbackId 
   uint32_t user_bits = registry_entry.user_arg & CallbackEventHandler::USER_BIT_MASK;
   Bus::adapterCallback(user_bits); // callback to the Adapter
 }
@@ -80,19 +94,16 @@ void Bus::setCallback(EVENT_CALLBACK _callback) {
            &event_callback, nullptr);
 }
 
-// Tell bus list of all outbound events we may send 
-void Bus::outboundEvents(uint64_t outbound[], int16_t count) {
-    for (int i=0;i<count;i++) 
-        eventHandler->add_entry(OWN_EVENT(outbound[i]),
-            CallbackEventHandler::RegistryEntryBits::IS_PRODUCER);
+// Tell bus about an outbound event we may send 
+void Bus::registerOutboundEvent(uint64_t event) {
+    eventHandler->add_entry(OWN_EVENT(event),
+        CallbackEventHandler::RegistryEntryBits::IS_PRODUCER);
 }
       
-// Tell bus list of all sender:events that we are interested in
-void Bus::inboundEvents(uint64_t inbound[], int16_t count) {
-    // notice the array position (Adapter id) is set as the user_bits
-    for (int i=0;i<count;i++) 
-        eventHandler->add_entry(inbound[i], 
-          i | CallbackEventHandler::RegistryEntryBits::IS_CONSUMER);
+// Tell bus about an event we are interested in
+void Bus::registerInboundEvent(uint64_t event, int32_t callbackId) {
+    eventHandler->add_entry(event, 
+        callbackId | CallbackEventHandler::RegistryEntryBits::IS_CONSUMER);
 }
      
 // Tell bus we are config complete and ready to play. 
@@ -136,12 +147,6 @@ void Bus::ready() {
 // Send an event on the bus
 void Bus::sendEvent(uint64_t eventid) {
     send_event(openmrn.stack()->node(),OWN_EVENT(eventid)); 
-}
-
-// Arduino activity loop called repeatedly
-void Bus::loop() {
-    // no longer required as we have done openmrn.start_executor_thread()
-    //  openmrn.loop();
 }
 
 
