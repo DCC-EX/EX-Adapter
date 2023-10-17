@@ -149,5 +149,5 @@ void Bus::sendEvent(uint64_t eventid) {
     send_event(openmrn.stack()->node(),OWN_EVENT(eventid)); 
 }
 
-
+void Bus::loop() {}  // Not required for LCC
 
