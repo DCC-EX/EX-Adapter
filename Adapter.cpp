@@ -37,6 +37,8 @@ void Adapter::setup() {
 }
 
 void Adapter::loop() {
+    // Allow Bus acess
+    Bus::loop();
     // Read any inbound
     while(Serial.available()) {
         if (parse(Serial.read())) {

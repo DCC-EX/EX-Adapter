@@ -41,6 +41,9 @@ class Bus {
 
       // Send an event on the bus
       static void sendEvent(uint64_t eventid);
+
+      // loop() support
+      static void loop();
       
       static EVENT_CALLBACK adapterCallback;
 };

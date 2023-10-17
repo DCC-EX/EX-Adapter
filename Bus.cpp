@@ -52,5 +52,5 @@ void Bus::sendEvent(uint64_t eventid) {
     // ?? CBUS 
 }
 
-
+void Bus::loop() {}  // Not required for LCC
 
