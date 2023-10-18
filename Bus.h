@@ -22,6 +22,7 @@
 #ifndef Bus_h
 #define Bus_h
 #include <Arduino.h>
+
 typedef void (*EVENT_CALLBACK)(uint32_t eventid);
 
 class Bus {
@@ -46,6 +47,11 @@ class Bus {
       static void loop();
       
       static EVENT_CALLBACK adapterCallback;
+
+      // Loco updated info
+      static void locoSpeedUpdate(uint16_t id, byte DCCSpeedByte);
+      static void locoFunctionUpdate(uint16_t id, uint32_t functionMap);
+      
 };
 
 #endif
