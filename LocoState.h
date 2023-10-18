@@ -19,34 +19,19 @@
  *  You should have received a copy of the GNU General Public License
  *  along with CommandStation.  If not, see <https://www.gnu.org/licenses/>.
  */
-
-#ifndef Adapter_h
-#define Adapter_h
+#ifndef LocoState_h
+#define LocoState_h
 #include <Arduino.h>
-enum ParserState  {
-      READY,  // looking for <
-      GETOP1,  // expecting opcode L  
-      GETOP2,  // expecting opcode2
-      SKIP,   // skipping blanks
-      PARSE,  // reading value
-    };
 
-class Adapter {
-    public:
-      static void setup();
-      static void loop();
-      static void eventHandler(uint32_t eventid);
-      void setSpeed(int16_t locoid,byte dccspeed);
-      void setFunction(int16_t locoid,byte function, bool on);
-
-    private:
-    static char opcode;
-    static byte params;
-    static ParserState state;
-    static uint64_t p[4];
-    static bool parse(char hot);
-    static void processCommand();
-    
+class LocoState {
+    public: 
+    static LocoState * get(uint16_t _id);
+    byte DCCSpeedByte;
+    int32_t functonMap;
+    bool isFunctionOn(byte _func);
+    LocoState(uint16_t _id);
+    static LocoState * first;
+    LocoState * next;
+    int16_t id;
 };
-
 #endif

@@ -21,6 +21,7 @@
  */
 #include <Arduino.h> 
 #include "Adapter.h"
+#include "LocoState.h"
 #include "Bus.h"
 
 ParserState Adapter::state=ParserState::READY; 
@@ -32,8 +33,8 @@ const uint64_t sender_mask=0xFFFFFFFFFFFF0000;
 
 void Adapter::setup() {
     Serial.begin(115200);
-    Serial.print(F("<L>\r\n")); // introduce self to CS.
     Bus::setCallback(eventHandler);
+    Serial.print(F("<L>\r\n")); // introduce self to CS.
 }
 
 void Adapter::loop() {
@@ -49,7 +50,8 @@ void Adapter::loop() {
     }
 }
 
-const char CMD_LCC='L'; // <opcode 
+const char CMD_LOCO='l'; // <l loco state broadcast 
+const char CMD_LCC='L'; // <L opcode 
 const char CMD_LISTENS_TO='L';  //<LL id xsender:event>
 const char CMD_SENDS='S';       //<LS xevent>
 const char CMD_READY='R';       // <LR>
@@ -65,6 +67,10 @@ bool Adapter::parse(char input) {
         case GETOP1:
              // This check is not nice but allows us to ditch 
             // anything we are not interested in quickly.
+            if (input==CMD_LOCO) {
+                state=SKIP; // normal 1-byte opcodes
+                break;
+            }
             if (input!=CMD_LCC) {
                 state=READY;
                 break;
@@ -120,7 +126,24 @@ bool Adapter::parse(char input) {
 
    void Adapter::processCommand() {
 
-    switch(opcode) {   
+    switch(opcode) {
+        case CMD_LOCO: // <l id ignored speedbyte functions>
+            {   
+                // maintain loco states and inform Bus of any changes
+                auto loco=LocoState::get(p[0]);
+                uint16_t speed=p[2];
+                uint32_t funcs=p[3];
+                
+                if (loco->DCCSpeedByte!=speed) {
+                    loco->DCCSpeedByte=speed;
+                    Bus::locoSpeedUpdate(loco->id,loco->DCCSpeedByte);
+                }
+                if (loco->functonMap!=funcs) {
+                    loco->functonMap=funcs;
+                    Bus::locoFunctionUpdate(loco->id,loco->functonMap);
+                }
+                break; 
+            }    
         case CMD_SEND: // <L  event>  send event to LCC         
             Bus::sendEvent(p[0]);
             break;
@@ -153,4 +176,29 @@ void Adapter::eventHandler(uint32_t eventid) {
     Serial.print(F("<L "));
     Serial.print(eventid);
     Serial.print(F(">\n"));  
+}
+
+void Adapter::setSpeed(int16_t locoid,byte dccspeed) {
+    // convert to jmri standard speed as understood by <t
+    int16_t jmrispeed=dccspeed & 0x7f;
+    if (jmrispeed==1) jmrispeed=-1;
+    else if (jmrispeed>0) jmrispeed--;
+
+    Serial.print(F("<t "));
+    Serial.print(locoid);
+    Serial.print(F(" "));
+    Serial.print(jmrispeed);
+    Serial.print(F(" "));
+    Serial.write((dccspeed & 0x80)? '1' : '0');
+    Serial.print(F(">\n")); 
+}
+
+void Adapter::setFunction(int16_t locoid,byte function, bool on) {
+    Serial.print(F("<F "));
+    Serial.print(locoid);
+    Serial.print(F(" "));
+    Serial.print(function);
+    Serial.print(F(" "));
+    Serial.print(on);
+    Serial.print(F(">\n")); 
 }

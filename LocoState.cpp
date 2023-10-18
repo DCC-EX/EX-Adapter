@@ -20,33 +20,25 @@
  *  along with CommandStation.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#ifndef Adapter_h
-#define Adapter_h
-#include <Arduino.h>
-enum ParserState  {
-      READY,  // looking for <
-      GETOP1,  // expecting opcode L  
-      GETOP2,  // expecting opcode2
-      SKIP,   // skipping blanks
-      PARSE,  // reading value
-    };
+#include "LocoState.h"
 
-class Adapter {
-    public:
-      static void setup();
-      static void loop();
-      static void eventHandler(uint32_t eventid);
-      void setSpeed(int16_t locoid,byte dccspeed);
-      void setFunction(int16_t locoid,byte function, bool on);
-
-    private:
-    static char opcode;
-    static byte params;
-    static ParserState state;
-    static uint64_t p[4];
-    static bool parse(char hot);
-    static void processCommand();
+LocoState * LocoState::first=nullptr;
     
-};
+LocoState::LocoState(uint16_t _id) {
+    id=_id;
+    next=first;
+    first=this;
+    DCCSpeedByte=0x80; // speed 0 fwd.
+    functonMap=0;   // no functions on
+    }
 
-#endif
+LocoState * LocoState::get(uint16_t _id) {
+        for (auto p=first;p;p=p->next) {
+            if (p->id==_id) return p;
+        }
+        return new LocoState(_id);
+}
+
+bool LocoState::isFunctionOn(byte _func) {
+        return functonMap & (1 <<_func);
+}

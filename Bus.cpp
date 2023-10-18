@@ -54,3 +54,9 @@ void Bus::sendEvent(uint64_t eventid) {
 
 void Bus::loop() {}  // Not required for LCC
 
+void Bus::locoSpeedUpdate(uint16_t id, byte DCCSpeedByte) {
+}
+void Bus::locoFunctionUpdate(uint16_t id, uint32_t functionMap) {
+}
+    
+
