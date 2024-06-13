@@ -2,6 +2,7 @@
  *  © 2023 Alex Shepherd
  *  © 2023 Balazs Racz
  *  © 2023 Chris Harlow
+ *  © 2023 Mike Dunston
  *  All rights reserved.
  *
  *  This file is part of EX-Adapter for LCC
@@ -155,6 +156,6 @@ void Bus::locoSpeedUpdate(uint16_t id, byte DCCSpeedByte) {
 
 }
 void Bus::locoFunctionUpdate(uint16_t id, uint32_t functionMap) {
-    
+
 }
  

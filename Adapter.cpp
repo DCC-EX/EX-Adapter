@@ -155,10 +155,12 @@ bool Adapter::parse(char input) {
         case CMD_LISTENS_TO:  // <LL id event> 
             // Add sender:event to listened list with id
             Bus::registerInboundEvent(p[1],p[0]);
+            Serial.print(F("<L>\r\n")); // keep polling for metadata
             break;
 
         case CMD_SENDS:  // <LS event>
             Bus::registerOutboundEvent(p[0]);
+            Serial.print(F("<L>\r\n")); // keep polling for metadata
             break; 
         
         case CMD_DUMP: // <LD>  Dump
